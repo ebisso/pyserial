@@ -144,12 +144,15 @@ class Serial(SerialBase):
             timeout = time.time() + self._timeout
         else:
             timeout = None
+        currentTimeout = self._timeout
         data = bytearray()
         while size > 0 and self.is_open:
             try:
-                b = self.queue.get(timeout=self._timeout)  # XXX inter char timeout
+                b = self.queue.get(timeout=currentTimeout)
             except queue.Empty:
                 if self._timeout == 0:
+                    break
+                if self._inter_byte_timeout is not None and self._inter_byte_timeout != 0:
                     break
             else:
                 if b is not None:
@@ -163,6 +166,8 @@ class Serial(SerialBase):
                 if self.logger:
                     self.logger.info('read timeout')
                 break
+            if self._inter_byte_timeout is not None and self._inter_byte_timeout != 0:
+                currentTimeout = self._inter_byte_timeout
         return bytes(data)
 
     def cancel_read(self):

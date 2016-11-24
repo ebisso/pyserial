@@ -221,7 +221,19 @@ class Test_MoreTimeouts(unittest.TestCase):
         self.assertRaises(serial.SerialTimeoutException, self.s.write, b"timeout please" * 200)
         t2 = time.time()
         self.assertTrue(0.9 <= (t2 - t1) < 2.1, "Timeout not in the given interval ({})".format(t2 - t1))
-
+        
+    def test_InterByteTimeout(self):
+        """Test read() inter byte timeout."""
+        self.s.port = PORT
+        self.s.timeout = 3
+        self.s.inter_byte_timeout = 1
+        self.s.open()
+        self.s.write(b"MSG")
+        self.s.flush()
+        t1 = time.time()
+        self.assertEqual(self.s.read(100), b"MSG")
+        t2 = time.time()
+        self.assertTrue((t2 - t1) <= 2, "Inter byte timeout not respected")
 
 if __name__ == '__main__':
     sys.stdout.write(__doc__)
