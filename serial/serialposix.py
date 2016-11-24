@@ -503,7 +503,7 @@ class Serial(SerialBase, PlatformSpecific):
                     raise SerialException('read failed: {}'.format(e))
             if timeout.expired():
                 break
-            if _inter_byte_timeout is not None and _inter_byte_timeout != 0:
+            if self._inter_byte_timeout is not None and self._inter_byte_timeout != 0:
                 break
         return bytes(read)
 
