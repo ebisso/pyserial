@@ -26,6 +26,7 @@ import threading
 import time
 import sys
 import serial
+import asyncio
 
 # on which port should the tests be performed:
 PORT = 'loop://'
@@ -225,15 +226,19 @@ class Test_MoreTimeouts(unittest.TestCase):
     def test_InterByteTimeout(self):
         """Test read() inter byte timeout."""
         self.s.port = PORT
-        self.s.timeout = 3
+        self.s.timeout = 10
         self.s.inter_byte_timeout = 1
         self.s.open()
-        self.s.write(b"MSG")
-        self.s.flush()
-        t1 = time.time()
-        self.assertEqual(self.s.read(100), b"MSG")
-        t2 = time.time()
-        self.assertTrue((t2 - t1) <= 2, "Inter byte timeout not respected")
+        def writeMessages():
+            time.sleep(1)
+            self.s.write(b"MSG1")
+            time.sleep(2)
+            self.s.write(b"MSG2")
+        t = threading.Thread(target=writeMessages)
+        t.start()
+        d = self.s.read(100)
+        self.assertEqual(d, b"MSG1", "Incorrect data")
+        t.join()
 
 if __name__ == '__main__':
     sys.stdout.write(__doc__)
